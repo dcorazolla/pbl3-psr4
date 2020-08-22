@@ -137,6 +137,12 @@ class Pagina
         $this->blob = new Blob($this);
         $this->inicio = $this->getmicrotime();
     }
+
+    public static function iniciar($config)
+    {
+        var_dump(__DIR__);
+        exit();
+    }
         
     /**
      * Gerencia os Headers que devem ser apresentados

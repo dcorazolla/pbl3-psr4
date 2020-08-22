@@ -1,7 +1,7 @@
 {
     "packages": {
         "dcorazolla/pbl3-psr4": {
-            "master": { @composer.json }
+            "master": { "composer.json" }
         }
     }
 }
