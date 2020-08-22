@@ -1,6 +1,6 @@
 {
     "packages": {
-        "publicare/publicare3": {
+        "dcorazolla/pbl3-psr4": {
             "master": { @composer.json }
         }
     }
