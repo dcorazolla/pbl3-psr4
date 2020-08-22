@@ -140,8 +140,10 @@ class Pagina
 
     public static function iniciar($config)
     {
-        var_dump(__DIR__);
-        exit();
+        // iniciando funções compartilhadas
+        require_once(__DIR__ . "/extra/constantes.php");
+        require_once(__DIR__ . "/extra/funcoes.php");
+        require_once(__DIR__ . "/extra/iniciar.php");
     }
         
     /**
