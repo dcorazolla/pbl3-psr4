@@ -462,9 +462,8 @@ class Usuario
 		
 	function podeExecutar($script)
 	{
-//            return true;
             if (!isset($this->cod_perfil)) $this->cod_perfil = _PERFIL_DEFAULT;
-//            xd($this->cod_perfil);
+
             //Administrador Pode Tudo
             if ($this->cod_perfil == _PERFIL_ADMINISTRADOR)
             {

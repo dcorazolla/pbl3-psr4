@@ -52,7 +52,7 @@ class Objeto
     {
         $this->page = $page;
         
-        $this->ArrayMetadados = $page->db->metadados;
+        $this->ArrayMetadados = $this->page->db->metadados;
         if ($cod_objeto!=-1)
         {
             if (is_numeric($cod_objeto))
@@ -63,6 +63,8 @@ class Objeto
             {
                 $dados = $this->page->adminobjeto->pegarDadosObjetoTitulo($cod_objeto);
             }
+
+// xd($dados);
 
             if (is_array($dados) && sizeof($dados)>2)
             {
@@ -91,8 +93,6 @@ class Objeto
                 && $this->metadados['url_amigavel']!="") 
         {
             $this->metadados['url'] = "/".$this->metadados['url_amigavel'];
-//            $this->metadados['url'] = "/".$this->page->config["portal"]["pasta"]."/".$this->metadados['url_amigavel'];
-//            $this->metadados['url'] = str_replace("//", "/", $this->metadados['url']);
         }
         else 
         {
@@ -107,7 +107,6 @@ class Objeto
      */
     function pegarCaminho()
     {
-//        xd($_SESSION);
         return $this->page->adminobjeto->pegarCaminhoObjeto($this->metadados['cod_objeto']);
     }
 

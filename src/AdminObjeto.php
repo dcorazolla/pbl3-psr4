@@ -258,26 +258,32 @@ class AdminObjeto
     function recursivaCaminhoObjeto($cod_objeto)
     {
         $result = array();
-        $sql = "SELECT ".$this->page->db->tabelas["parentesco"]["nick"].".".$this->page->db->tabelas["parentesco"]["colunas"]["cod_pai"]." AS cod_pai "
-                ." FROM ".$this->page->db->tabelas["parentesco"]["nome"]." ".$this->page->db->tabelas["parentesco"]["nick"]." "
-                ." WHERE ".$this->page->db->tabelas["parentesco"]["nick"].".".$this->page->db->tabelas["parentesco"]["colunas"]["cod_objeto"]." = ".$cod_objeto." "
-                . " ORDER BY ".$this->page->db->tabelas["parentesco"]["nick"].".".$this->page->db->tabelas["parentesco"]["colunas"]["ordem"]." DESC";
-        $rs = $this->page->db->ExecSQL($sql);
 
-        if ($rs->_numOfRows>0)
+        if ($cod_objeto != $this->page->config["portal"]["objroot"])
         {
-            while (!$rs->EOF)
+            $sql = "SELECT ".$this->page->db->tabelas["parentesco"]["nick"].".".$this->page->db->tabelas["parentesco"]["colunas"]["cod_pai"]." AS cod_pai, "
+                    ." ".$this->page->db->tabelas["objeto"]["nick"].".".$this->page->db->tabelas["objeto"]["colunas"]["script_exibir"]." AS script_exibir "
+                    ." FROM ".$this->page->db->tabelas["parentesco"]["nome"]." ".$this->page->db->tabelas["parentesco"]["nick"]." "
+                    ." LEFT JOIN ".$this->page->db->tabelas["objeto"]["nome"]." ".$this->page->db->tabelas["objeto"]["nick"]." "
+                        ." ON ".$this->page->db->tabelas["parentesco"]["nick"].".".$this->page->db->tabelas["parentesco"]["colunas"]["cod_pai"]." = ".$this->page->db->tabelas["objeto"]["nick"].".".$this->page->db->tabelas["objeto"]["colunas"]["cod_objeto"]." "
+                    ." WHERE ".$this->page->db->tabelas["parentesco"]["nick"].".".$this->page->db->tabelas["parentesco"]["colunas"]["cod_objeto"]." = ".$cod_objeto." "
+                    . " ORDER BY ".$this->page->db->tabelas["parentesco"]["nick"].".".$this->page->db->tabelas["parentesco"]["colunas"]["ordem"]." DESC";
+            $rs = $this->page->db->ExecSQL($sql);
+    
+            if ($rs->_numOfRows>0)
             {
-                $result[] = $rs->fields['cod_pai'];
-                $rs->MoveNext();
-            }
-            return implode (',',$result);
-        } 
-        else 
-        {
-//            xd($this->page);
-            return $this->page->config["portal"]["objroot"];
+                while (!$rs->EOF)
+                {
+                    $result[$rs->fields['cod_pai']] = array(
+                        "cod_objeto" => $rs->fields['cod_pai'],
+                        "script_exibir" => $rs->fields['script_exibir']
+                    );
+                    $rs->MoveNext();
+                }
+            } 
+            return $result;
         }
+
     }
 
     /**
@@ -1676,36 +1682,30 @@ class AdminObjeto
      */
     function estaSobAreaProtegida($cod_objeto=-1)
     {
-        $this->page->incluirAdmin();
         $protegido = false;
         $caminho2 = $this->page->objeto->CaminhoObjeto;
         $objBlob = clone $this->page->objeto;
         $caminho = is_array($caminho2)?$caminho2:array();
         
-//        xd($cod_objeto);
-        
         if ($cod_objeto != -1)
         {
-//            if ($caminho2 != "")
-//            {
-                $caminho = explode(",", $this->page->adminobjeto->recursivaCaminhoObjeto($cod_objeto));
-//            }
+            $caminho = $this->recursivaCaminhoObjeto($cod_objeto);
             $objBlob = new Objeto($this->page, $cod_objeto);
         }
         else
         {
             $cod_objeto = $this->page->objeto->valor("cod_objeto");
         }
-//        $caminho[] = $cod_objeto;
 
-
+        xd($caminho);
+        
         // pegando permissao do usuario no objeto
         $permissao = false;
         if (isset($_SESSION['usuario']["cod_usuario"]))
         {
             $permissao = $this->page->administracao->pegarPerfilUsuarioObjeto($_SESSION['usuario']["cod_usuario"], $cod_objeto);
         }
-        
+        // x($permissao);
 
         // verificando se o objeto está publicado
         if ($objBlob->valor("cod_status") != "2" && !$permissao)
@@ -1720,25 +1720,28 @@ class AdminObjeto
         }
         else
         {
-            // verificando se tem objeto protegido no parentesco
-            
-//            xd($caminho);
-            if (count($caminho) > 0)
+            if ($cod_objeto != $this->page->config["portal"]["objroot"])
             {
-                $sql = "SELECT DISTINCT ".$this->page->db->tabelas["objeto"]["colunas"]["script_exibir"]." AS script_exibir "
-                        . " FROM ".$this->page->db->tabelas["objeto"]["nome"]." "
-                        . " WHERE ".$this->page->db->tabelas["objeto"]["colunas"]["cod_objeto"]." IN (". implode(",", $caminho).") "
-                        . " AND ".$this->page->db->tabelas["objeto"]["colunas"]["cod_objeto"]." <> ".$cod_objeto;
-                $rs = $this->page->db->ExecSQL($sql);
-                while ($row = $rs->FetchRow())
+                if (count($caminho) > 0)
                 {
-                    if (preg_match("/_protegido.*/", $row["script_exibir"]))
+                    $sql = "SELECT DISTINCT ".$this->page->db->tabelas["objeto"]["colunas"]["script_exibir"]." AS script_exibir "
+                            . " FROM ".$this->page->db->tabelas["objeto"]["nome"]." "
+                            . " WHERE ".$this->page->db->tabelas["objeto"]["colunas"]["cod_objeto"]." IN (". implode(",", $caminho).") "
+                            . " AND ".$this->page->db->tabelas["objeto"]["colunas"]["cod_objeto"]." <> ".$cod_objeto;
+                    $rs = $this->page->db->ExecSQL($sql);
+                    while ($row = $rs->FetchRow())
                     {
-                        $protegido = true;
-                        break;
+                        if (preg_match("/_protegido.*/", $row["script_exibir"]))
+                        {
+                            $protegido = true;
+                            break;
+                        }
                     }
                 }
             }
+            // verificando se tem objeto protegido no parentesco
+           xd($caminho);
+            
         }
         
 
